@@ -7,7 +7,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const mongoose = require('mongoose')
 
-
+var indexRoutes = require('./routes/index');
 var authRoutes = require('./routes/auth');
 var adminRoutes = require('./routes/admin');
 var seatsRouter = require('./routes/seats')
@@ -36,6 +36,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/', indexRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/registrants', registrantRoutes);
