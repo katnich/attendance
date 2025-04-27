@@ -1,8 +1,8 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const settingSchema = new mongoose.Schema({
-  _id: String, // ใช้ค่า "seats"
-  totalSeats: Number
+    totalSeats: { type: Number, required: true },
+    reservedSeats: { type: Number, required: true }
 });
 
-module.exports = mongoose.model("Setting", settingSchema);
+module.exports = mongoose.model('Setting', settingSchema);
