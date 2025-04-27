@@ -5,7 +5,7 @@ const Setting = require("../models/Setting");
 const authMiddleware = require("../middlewares/auth");
 
 // ดูข้อมูลเต็ม
-router.get("search/registrants", authMiddleware, async (req, res) => {
+router.get("/search/registrants", authMiddleware, async (req, res) => {
   try {
     const search = req.query.search || "";
     const regex = new RegExp(search, "i");
@@ -21,13 +21,14 @@ router.get("search/registrants", authMiddleware, async (req, res) => {
 });
 
 // กำหนดจำนวนที่นั่ง
-router.put("update/seats", authMiddleware, async (req, res) => {
+router.put("/update/seats", authMiddleware, async (req, res) => {
   const { totalSeats } = req.body;
   try {
     let setting = await Setting.findOne();
     if (!setting) {
       setting = new Setting({ totalSeats, reservedSeats: 0 });
     } else {
+      if(totalSeats < setting.reservedSeats) return res.status(400).json({ message: 'You cannot set the value lower than the reserved seats.' });
       setting.totalSeats = totalSeats;
     }
     await setting.save();
