@@ -10,16 +10,32 @@ router.get("/search/registrants", authMiddleware, async (req, res) => {
     const search = req.query.search || "";
     const regex = new RegExp(search, "i");
     const limit = parseInt(req.query.limit) || 10;
-    const offset = parseInt(req.query.offset) || 0;
+    const page = parseInt(req.query.page) || 1;
+    const sortField = req.query.sortField || "registeredAt";
+    const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+    let filter = {
+      $or: [{ firstName: regex }, { lastName: regex }, { phoneNumber: regex }],
+    };
 
-    const registrants = await Registrant.find({
-      $or: [{ firstName: regex }, { lastName: regex }, { phone: regex }],
-    })
-      .sort({ registeredAt: -1 })
-      .skip(offset)
+    const totalCount = await Registrant.countDocuments(filter);
+
+    const registrants = await Registrant.find(filter)
+      .sort({ [sortField]: sortOrder })
+      .skip((page - 1) * limit)
       .limit(limit);
 
-    res.json(registrants);
+    const setting = await Setting.findOne();
+
+    res.json({
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+      perPage: limit,
+      totalSeats: setting.totalSeats,
+      reservedSeats: setting.reservedSeats,
+      remainingSeats: setting.totalSeats - setting.reservedSeats,
+      data: registrants,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -34,11 +50,9 @@ router.put("/update/seats", authMiddleware, async (req, res) => {
       setting = new Setting({ totalSeats, reservedSeats: 0 });
     } else {
       if (totalSeats < setting.reservedSeats)
-        return res
-          .status(400)
-          .json({
-            message: "You cannot set the value lower than the reserved seats.",
-          });
+        return res.status(400).json({
+          message: "You cannot set the value lower than the reserved seats.",
+        });
       setting.totalSeats = totalSeats;
     }
     await setting.save();
