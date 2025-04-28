@@ -8,9 +8,13 @@ router.get("/search", async (req, res) => {
   try {
     const search = req.query.search || "";
     const regex = new RegExp(search, "i");
+	const limit = parseInt(req.query.limit) || 10;
+    const offset = parseInt(req.query.offset) || 0;
 
     const registrants = await Registrant.find({ firstName: regex })
       .sort({ registeredAt: -1 })
+	  .skip(offset)
+      .limit(limit)
       .select("firstName");
 
     res.json(registrants);
